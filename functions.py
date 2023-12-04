@@ -95,6 +95,7 @@ def get_match_h2h_api(conn, headers, row):
                 match_1st_half_score_away = h2h_match.get('periods').get('first').get('away')
                 match_2nd_half_score_home = h2h_match.get('periods').get('second').get('home')
                 match_2nd_half_score_away = h2h_match.get('periods').get('second').get('away')
+
                 h2h_detailed = (match_id, #0
                                 match_date_formatted, #1
                                 match_time, #2
@@ -154,6 +155,7 @@ def prepare_worksheet(content, tab_name, file):
     cell_bold.set_bold()
     cell_number = file.add_format()
     cell_number.set_num_format(0) 
+    cell_prcnt = file.add_format({'num_format': '0%'})
 
     row = 0
     col = 0
@@ -168,10 +170,16 @@ def prepare_worksheet(content, tab_name, file):
         # Regular line
         else:
             for col in range(0, col_count):
-                if is_number(str(line[col])):
-                    worksheet.write(row, col, int(line[col]), cell_number)
+                if col <= 8:
+                    if is_number(str(line[col])):
+                        worksheet.write(row, col, int(line[col]), cell_number)
+                    else:
+                        worksheet.write(row, col, line[col])
                 else:
-                    worksheet.write(row, col, line[col])
+                    if is_number(str(line[col])):
+                        worksheet.write(row, col, int(line[col]), cell_prcnt)
+                    else:
+                        worksheet.write(row, col, line[col])
         row = row + 1
     worksheet.autofit()
 
@@ -186,7 +194,10 @@ def save_data_to_excel(h2h_short_results, h2h_detailed_results):
     Returns:
         None
     """
-    file_path = 'dane/api/Handball_' + today_date_format + '.xlsx'
+    date_split = today_date_format.split('-')
+    date = date_split[0] + '_' + date_split[1] + '_' + date_split[2]
+    
+    file_path = 'dane/api/Handball_' + date + '.xlsx'
     workbook = xlsxwriter.Workbook(file_path)
     
     h2h_short_header = ( 'Date', #0
@@ -196,7 +207,12 @@ def save_data_to_excel(h2h_short_results, h2h_detailed_results):
                          'Away', #4
                          '1st Half Draws', #5
                          '2nd Half Draws', #6
-                         'Final Time Draws' #7
+                         'Final Time Draws', #7
+                         'Matches Count', #8
+                         'Full Time Draws %', #9
+                         '1st Half Draws %', #10
+                         '2nd Half Draws %', #11
+                         'Total Draws %', #12
     )
     h2h_short_results.insert(0, h2h_short_header)
 
@@ -221,3 +237,4 @@ def save_data_to_excel(h2h_short_results, h2h_detailed_results):
     prepare_worksheet(h2h_short_results, 'Draws', workbook)
     prepare_worksheet(h2h_detailed_results, 'Detailed Results', workbook)
     workbook.close()
+    print('Excel file saved to ' + file_path)

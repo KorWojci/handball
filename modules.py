@@ -5,6 +5,7 @@ import requests
 import xlsxwriter
 import http.client
 import json
+import time
 from bs4 import BeautifulSoup
 from datetime import datetime
 from datetime import date
